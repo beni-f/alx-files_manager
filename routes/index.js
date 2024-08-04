@@ -1,12 +1,11 @@
 const express = require('express');
-const AppController = require('../controllers/AppController');
+const { getStats, getStatus } = require('../controllers/AppController');
+const { postNew } = require('../controllers/UsersController');
 
 const router = express.Router();
 
-const { getStatus } = AppController;
-const { getStats } = AppController;
-
 router.get('/status', getStatus);
 router.get('/stats', getStats);
+router.post('/users', postNew);
 
 module.exports = router;
