@@ -27,7 +27,7 @@ class UsersController {
       password: hashedPassword,
     };
 
-    const result = await dbClient.client.db.collection('users').insertOne(newUser);
+    const result = await dbClient.client.db().collection('users').insertOne(newUser);
 
     return res.status(201).json({
       email,
@@ -49,7 +49,7 @@ class UsersController {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const user = await dbClient.db.collection('users').findOne({ _id: dbClient.getObjectId(userId) }, { projection: { email: 1 } });
+    const user = await dbClient.db().collection('users').findOne({ _id: dbClient.getObjectId(userId) }, { projection: { email: 1 } });
 
     if (!user) {
       return res.status(401).json({ error: 'Unauthorized' });
