@@ -27,7 +27,7 @@ class UsersController {
       password: hashedPassword,
     };
 
-    const result = await dbClient.db.collection('users').insertOne(newUser);
+    const result = await dbClient.client.db.collection('users').insertOne(newUser);
 
     return res.status(201).json({
       email,
