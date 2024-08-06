@@ -87,7 +87,7 @@ class FilesController {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const file = dbClient.client.db().collection('files').findOne({ _id: ObjectId(id), userId: ObjectId(userId) });
+    const file = dbClient.client.db().collection('files').findOne({ _id: ObjectId(id), userId: new ObjectId(userId) });
     if (!file) {
       return res.status(404).json({ error: 'Not found' });
     }
