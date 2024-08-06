@@ -30,8 +30,8 @@ class UsersController {
     const result = await dbClient.client.db().collection('users').insertOne(newUser);
 
     return res.status(201).json({
-      email,
       id: result.insertedId.toString(),
+      email,
     });
   }
 
