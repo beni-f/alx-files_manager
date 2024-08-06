@@ -95,7 +95,8 @@ class FilesController {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const file = dbClient.client.db().collection('files').findOne({ _id: new ObjectId(id), userId: new ObjectId(userId) });
+    const file = await dbClient.client.db().collection('files').findOne({ _id: new ObjectId(id), userId: new ObjectId(userId) });
+
     if (!file) {
       return res.status(404).json({ error: 'Not found' });
     }
@@ -116,11 +117,8 @@ class FilesController {
       userId: new ObjectId(userId),
       parentId: parentId === 0 ? 0 : new ObjectId(parentId),
     };
-    console.log(new Object(userId))
 
     const files = await dbClient.client.db().collection('files').find(query).skip(parseInt(page, 10) * 20).limit(20).toArray();
-
-    console.log(files)
 
     return res.status(200).json(files);
   }
