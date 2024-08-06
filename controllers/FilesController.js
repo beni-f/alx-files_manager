@@ -35,9 +35,9 @@ class FilesController {
             return res.status(400).json({ error: 'Missing data' });
         }
 
-        // Check if parentId is valid
+
         if (parentId !== 0) {
-            const parentFile = await dbClient.db.collection('files').findOne({ _id: ObjectId(parentId) });
+            const parentFile = await dbClient.client.db().collection('files').findOne({ _id: ObjectId(parentId) });
 
             if (!parentFile) {
                 return res.status(400).json({ error: 'Parent not found' });
@@ -72,7 +72,7 @@ class FilesController {
         fs.writeFileSync(localPath, fileData);
 
         fileDocument.localPath = localPath;
-        await dbClient.db.collection('files').insertOne(fileDocument);
+        await dbClient.client.db().collection('files').insertOne(fileDocument);
 
         return res.status(201).json(fileDocument);
     }
