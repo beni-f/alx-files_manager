@@ -52,17 +52,15 @@ class FilesController {
             userId: ObjectId(userId),
             name,
             type,
-            isPublic,
             parentId: parentId !== 0 ? ObjectId(parentId) : 0,
+            isPublic,
         };
 
         if (type === 'folder') {
-            // If it's a folder, just save the document
-            await dbClient.db.collection('files').insertOne(fileDocument);
+            await dbClient.client.db().collection('files').insertOne(fileDocument);
             return res.status(201).json(fileDocument);
         }
 
-        // Handle file or image types
         const folderPath = process.env.FOLDER_PATH || '/tmp/files_manager';
         if (!fs.existsSync(folderPath)) {
             fs.mkdirSync(folderPath, { recursive: true });
