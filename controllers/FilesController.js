@@ -37,7 +37,7 @@ class FilesController {
     }
 
     if (parentId !== 0) {
-      const parentFile = await dbClient.client.db().collection('files').findOne({ _id: ObjectId(parentId) });
+      const parentFile = await dbClient.client.db().collection('files').findOne({ _id: new ObjectId(parentId) });
 
       if (!parentFile) {
         return res.status(400).json({ error: 'Parent not found' });
@@ -49,11 +49,11 @@ class FilesController {
     }
 
     const fileDocument = {
-      userId: ObjectId(userId),
+      userId: new ObjectId(userId),
       name,
       type,
-      parentId: parentId !== 0 ? ObjectId(parentId) : 0,
       isPublic,
+      parentId: parentId !== 0 ? ObjectId(parentId) : 0,
     };
 
     if (type === 'folder') {
@@ -72,9 +72,16 @@ class FilesController {
     fs.writeFileSync(localPath, fileData);
 
     fileDocument.localPath = localPath;
-    await dbClient.client.db().collection('files').insertOne(fileDocument);
+    const file = await dbClient.client.db().collection('files').insertOne(fileDocument);
 
-    return res.status(201).json(fileDocument);
+    return res.status(201).json( {
+        id: file.insertedId,
+        userId: new ObjectId(userId),
+        name,
+        type,
+        isPublic,
+        parentId,
+    });
   }
 
   static async getShow(req, res) {
@@ -87,7 +94,7 @@ class FilesController {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const file = dbClient.client.db().collection('files').findOne({ _id: ObjectId(id), userId: new ObjectId(userId) });
+    const file = dbClient.client.db().collection('files').findOne({ _id: ObjectId(id), userId: ObjectId(userId) });
     if (!file) {
       return res.status(404).json({ error: 'Not found' });
     }
