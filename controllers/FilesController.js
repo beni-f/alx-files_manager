@@ -165,7 +165,7 @@ class FilesController {
         return res.status(404).json({ error: 'Not found' })
     }
 
-    if (!file.isPublic && (!userId || file.userId.toString() !== userId)) {
+    if (!file.isPublic && file.userId.toString() !== userId) {
         return res.status(404).json({ error: 'Not found' });
     }
 
@@ -176,10 +176,16 @@ class FilesController {
         return res.status(404).json({ error: 'Not found' })
 
     const mimeType = mime.lookup(file.name)
-    res.setHeader('Content-Type', mimeType)
+    console.log(mimeType)
+    res.setHeader('Content-Type', mimeType || 'text/plain; charset=utf-8')
 
     const fileStream = fs.createReadStream(file.localPath)
-    fileStream.pipe(res)
+    res.status(200).sendFile(path.resolve(file.localPath), (err) => {
+        if (err) {
+            console.log(err)
+            res.status(500).json({ error: 'Internal server error' })
+        }
+    })
   }
 }
 
