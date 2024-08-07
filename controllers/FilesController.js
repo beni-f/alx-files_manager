@@ -2,9 +2,9 @@ const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const { ObjectId } = require('mongodb');
+const mime = require('mime-types');
 const redisClient = require('../utils/redis');
 const dbClient = require('../utils/db');
-const mime = require('mime-types')
 
 class FilesController {
   static async postUpload(req, res) {
@@ -39,7 +39,7 @@ class FilesController {
 
     if (parentId !== 0) {
       const parentFile = await dbClient.client.db().collection('files').findOne({ _id: new ObjectId(parentId) });
-      console.log(parentFile)
+      console.log(parentFile);
 
       if (!parentFile) {
         return res.status(400).json({ error: 'Parent not found' });
@@ -76,13 +76,13 @@ class FilesController {
     fileDocument.localPath = localPath;
     const file = await dbClient.client.db().collection('files').insertOne(fileDocument);
 
-    return res.status(201).json( {
-        id: file.insertedId,
-        userId: new ObjectId(userId),
-        name,
-        type,
-        isPublic,
-        parentId,
+    return res.status(201).json({
+      id: file.insertedId,
+      userId: new ObjectId(userId),
+      name,
+      type,
+      isPublic,
+      parentId,
     });
   }
 
@@ -119,45 +119,45 @@ class FilesController {
       parentId: parentId === 0 ? 0 : new ObjectId(parentId),
     };
 
-    const files = await dbClient.client.db().collection('files').find(query).skip(parseInt(page, 10) * 20).limit(20).toArray();
+    const files = await dbClient.client.db().collection('files').find(query).skip(parseInt(page, 10) * 20)
+      .limit(20)
+      .toArray();
 
     return res.status(200).json(files);
   }
 
   static async putPublish(req, res) {
-    const token = req.headers['x-token']
-    const id = req.params.id
+    const token = req.headers['x-token'];
+    const { id } = req.params;
     if (!token) {
-        return res.status(401).json({ error: 'Unauthorized' })
+      return res.status(401).json({ error: 'Unauthorized' });
     }
-    const userId = await redisClient.get(`auth_${token}`)
+    const userId = await redisClient.get(`auth_${token}`);
 
     const file = await dbClient.client.db().collection('files').findOne({ _id: new ObjectId(id), userId: new ObjectId(userId) });
     if (!file) {
-        return res.status(404).json({ error: 'Not found' })
+      return res.status(404).json({ error: 'Not found' });
     }
     file.isPublic = true;
-    return res.status(200).json(file)
+    return res.status(200).json(file);
   }
 
   static async putUnpublish(req, res) {
-    const token = req.headers['x-token']
-    const id = req.params.id
-    if (!token) 
-        return res.status(401).json({ error: 'Unauthorized' })
-    const userId = await redisClient.get(`auth_${token}`)
-    const file = await dbClient.client.db().collection('files').findOne({ _id: new ObjectId(id), userId: new ObjectId(userId) })
-    if (!file) 
-        return res.status(404).json({ error: 'Not found' })
+    const token = req.headers['x-token'];
+    const { id } = req.params;
+    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+    const userId = await redisClient.get(`auth_${token}`);
+    const file = await dbClient.client.db().collection('files').findOne({ _id: new ObjectId(id), userId: new ObjectId(userId) });
+    if (!file) return res.status(404).json({ error: 'Not found' });
     file.isPublic = false;
-    return res.status(200).json(file)
+    return res.status(200).json(file);
   }
 
   static async getFile(req, res) {
     try {
       const fileId = req.params.id;
       const userId = await redisClient.get(`auth_${req.headers['x-token']}`);
-      
+
       if (!ObjectId.isValid(fileId)) {
         return res.status(404).json({ error: 'Not found' });
       }
@@ -183,9 +183,9 @@ class FilesController {
       const mimeType = mime.lookup(file.name);
 
       res.setHeader('Content-Type', mimeType);
-      res.status(200).sendFile(file.localPath);
+      return res.status(200).sendFile(file.localPath);
     } catch (error) {
-      res.status(500).json({ error: 'Internal server error' });
+      return res.status(500).json({ error: 'Internal server error' });
     }
   }
 }
