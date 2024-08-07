@@ -122,6 +122,35 @@ class FilesController {
 
     return res.status(200).json(files);
   }
+
+  static async putPublish(req, res) {
+    const token = req.headers['x-token']
+    const id = req.params.id
+    if (!token) {
+        return res.status(401).json({ error: 'Unauthorized' })
+    }
+    const userId = await redisClient.get(`auth_${token}`)
+
+    const file = await dbClient.client.db().collection('files').findOne({ _id: new ObjectId(id), userId: new ObjectId(userId) });
+    if (!file) {
+        return res.status(404).json({ error: 'Not found' })
+    }
+    file.isPublic = true;
+    return res.status(200).json(file)
+  }
+
+  static async putUnpublish(req, res) {
+    const token = req.headers['x-token']
+    const id = req.params.id
+    if (!token) 
+        return res.status(401).json({ error: 'Unauthorized' })
+    const userId = await redisClient.get(`auth_${token}`)
+    const file = await dbClient.client.db().collection('files').findOne({ _id: new ObjectId(id), userId: new ObjectId(userId) })
+    if (!file) 
+        return res.status(404).json({ error: 'Not found' })
+    file.isPublic = false;
+    return res.status(200).json(file)
+  }
 }
 
 module.exports = FilesController;
