@@ -5,6 +5,8 @@ const { ObjectId } = require('mongodb');
 const mime = require('mime-types');
 const redisClient = require('../utils/redis');
 const dbClient = require('../utils/db');
+const Queue = require('bull')
+const fileQueue = new Queue('fileQueue')
 
 class FilesController {
   static async postUpload(req, res) {
@@ -75,6 +77,11 @@ class FilesController {
 
     fileDocument.localPath = localPath;
     const file = await dbClient.client.db().collection('files').insertOne(fileDocument);
+    const fileId = file.insertedId;
+
+    if (type == 'image')
+      fileQueue.add({ userId, fileId })
+
 
     return res.status(201).json({
       id: file.insertedId,
@@ -157,6 +164,7 @@ class FilesController {
     try {
       const fileId = req.params.id;
       const userId = await redisClient.get(`auth_${req.headers['x-token']}`);
+      const size = req.query.size;
 
       if (!ObjectId.isValid(fileId)) {
         return res.status(404).json({ error: 'Not found' });
@@ -176,14 +184,20 @@ class FilesController {
         return res.status(404).json({ error: 'Not found' });
       }
 
-      if (!fs.existsSync(file.localPath)) {
+      let filePath = file.localPath;
+      if (size) {
+        filePath = `${file.localPath}_${size}`
+      }
+
+      if (!fs.existsSync(filePath)) {
         return res.status(404).json({ error: 'Not found' });
       }
 
       const mimeType = mime.lookup(file.name);
 
       res.setHeader('Content-Type', mimeType);
-      return res.status(200).sendFile(file.localPath);
+
+      return res.status(200).sendFile(filePath);
     } catch (error) {
       return res.status(500).json({ error: 'Internal server error' });
     }
